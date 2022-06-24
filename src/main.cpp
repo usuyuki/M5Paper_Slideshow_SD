@@ -15,24 +15,49 @@ bool ends_with(const std::string& str, const std::string& suffix) {
 }
 
 /**
-* .jpgのファイル名のポインタをfile_name_pointers配列に格納し、ファイル数を返す
+* 文字列を辞書樹にソート
 */
-int roadDirectory(File dir) {
+void SortByName()
+{
+	int i, j;
+	char* buf;//比較時逃がす
+
+	for (i = 0; i < n_file - 1; i++) {
+		//整列済みの箇所は探索不要なので(j>i)
+		for (j = n_file - 1; j > i; j--) {
+			if (strcmp(file_name_pointers[j-1], file_name_pointers[j]) > 0) {
+				buf = file_name_pointers[j];
+				file_name_pointers[j] = file_name_pointers[j - 1];
+				file_name_pointers[j - 1] = buf;
+			}
+		}
+	}
+}
+
+/**
+* .jpgのファイル名のポインタをfile_name_pointers配列に格納
+*/
+void roadDirectory(File dir) {
   int i=0;
+  const char *name;
   while(true) {
     File entry =  dir.openNextFile();
     if (! entry) {
       dir.rewindDirectory();
       break;
     }
-    Serial.printf("file_name:%s\n",entry.name());
-    if(ends_with(entry.name(),".jpg") || ends_with(entry.name(),".JPG")){
-      file_name_pointers[i] = (char*)malloc(strlen(entry.name()) + 1);//文字列へのポインタを確保
-      strcpy(file_name_pointers[i], entry.name());//文字列へのポインタをコピー
+    name = entry.name();
+    Serial.printf("file_name:%s\n",name);
+    if(ends_with(name,".jpg") || ends_with(name,".JPG")){
+      file_name_pointers[i] = (char*)malloc(strlen(name) + 1);//文字列へのポインタを確保
+      strcpy(file_name_pointers[i], name);//文字列へのポインタをコピー
       i++;
     }
   }
-  return i;
+  n_file = i;
+  // 配列をソート(デフォルトでは不思議な順番になるので名前順に変更)
+  SortByName();
+  
 }
 
 /** 
@@ -102,7 +127,7 @@ void setup()
 
   //ファイル読み込み
   root = SD.open("/");
-  n_file = roadDirectory(root);
+  roadDirectory(root);
 
   if(n_file ==0){
     // ファイル無いときのエラーハンドリング大変なので停止せる
@@ -124,7 +149,7 @@ void setup()
 
     // 描画
     canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-   delay(2000);
+    delay(2000);
     //終了
     M5.shutdown(86400);//1日停止
 
