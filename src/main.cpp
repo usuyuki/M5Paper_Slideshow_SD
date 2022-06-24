@@ -107,7 +107,7 @@ void setup()
     // ファイル無いときのエラーハンドリング大変なので停止せる
     Serial.println("no file");
     canvas.setTextSize(2);
-    canvas.drawString("File Not Found Exception", 45, 350);
+    canvas.drawString("File Naiyo Exception", 45, 350);
 
     // 気温取得
     M5.SHT30.Begin();//温度計周り
@@ -123,9 +123,9 @@ void setup()
 
     // 描画
     canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
-
+   delay(2000);
     //終了
-    M5.shutdown();
+    M5.shutdown(86400);//1日停止
 
   }else{
     PrintLines(n_file);
@@ -170,6 +170,8 @@ void loop() {
       }
       drawImg(selected_file_number);
       delay(1000);
+    }else if(M5.BtnP.isPressed()){
+      M5.shutdown(86400);//1日停止
     }
   }
 }
