@@ -1,12 +1,14 @@
 <!-- @format -->
 
 # M5Paper_Slideshow_SD
-
 M5PaperのスイッチでSDに入ったjpg画像を表示するコード
 
 上 → 次の画像  
 下 → 前の画像  
 中央 → 停止
+
+![IMG20220624134241](https://user-images.githubusercontent.com/63891531/175464271-c0326cc6-5f05-4ccd-9c8d-d8a0944e3832.jpg)
+
 
 画像がないときは「File Naiyo Exception」と温度湿度を表示して停止。  
 
