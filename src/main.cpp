@@ -111,6 +111,16 @@ int Chk_battery()
   return (int)(battery * 100);
 }
 
+/** 
+* スライドショーにして良いファイルかを判定する
+*/
+bool is_slide(int slideshow_number){
+  if(ends_with(file_name_pointers[slideshow_number],"_noslide.jpg") || ends_with(file_name_pointers[slideshow_number],"_noslide.JPG")){
+    return false;
+  }else{
+    return true;
+  }
+}
 
 /** 
 * Arduino共通のセットアップ処理
@@ -204,8 +214,10 @@ void loop() {
       while(true){
         //上でインクリメントしてるので==n_file-1でなく>=にしてる
         slideshow_number = (slideshow_number>=(n_file-1)) ? 0 : slideshow_number+1;
-        drawImg(slideshow_number);
-        delay(10000);
+        if(is_slide(slideshow_number)){
+          drawImg(slideshow_number);
+          delay(10000);
+        }
       }
     }
   }
