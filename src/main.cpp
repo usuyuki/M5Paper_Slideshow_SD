@@ -15,7 +15,7 @@ bool ends_with(const std::string& str, const std::string& suffix) {
 }
 
 /**
-* 文字列を辞書樹にソート
+* 文字列を辞書順にソート
 */
 void SortByName()
 {
@@ -171,7 +171,6 @@ void loop() {
     canvas.createCanvas(540, 960);
     canvas.setTextSize(6);
     canvas.drawString("Charging....", 45, 350);
-    // canvas.drawString("Batt:" + String(btLevel) + "%",45,550 );
     canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
     delay(60000);
   }else{
@@ -195,7 +194,7 @@ void loop() {
         selected_file_number=(n_file-1);
       }
       drawImg(selected_file_number);
-      delay(1000);
+      delay(500);
     }else if(M5.BtnP.isPressed()){
       M5.shutdown(86400);//1日停止
     }
