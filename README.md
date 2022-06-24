@@ -1,7 +1,7 @@
 <!-- @format -->
 
 # M5Paper_Slideshow_SD
-M5PaperのスイッチでSDに入ったjpg画像を表示するコード
+M5PaperのスイッチでSDに入ったjpg画像を表示するコード(1~100枚まで多分対応)
 
 上 → 次の画像  
 下 → 前の画像  
