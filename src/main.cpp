@@ -1,9 +1,175 @@
-#include <Arduino.h>
+#include <M5EPD.h>
+File root;
+M5EPD_Canvas canvas(&M5.EPD);
+static char* file_name_pointers[100];//文字列へのポインタの配列
+static int n_file = 0;//ファイル数
+static int selected_file_number=0;//ファイル位置を保持
 
-void setup() {
-  // put your setup code here, to run once:
+/**
+* 文字列が特定の文字列で終わるか？ 
+*/
+bool ends_with(const std::string& str, const std::string& suffix) {
+  size_t len1 = str.size();
+  size_t len2 = suffix.size();
+  return len1 >= len2 && str.compare(len1 - len2, len2, suffix) == 0;
+}
+
+/**
+* .jpgのファイル名のポインタをfile_name_pointers配列に格納し、ファイル数を返す
+*/
+int roadDirectory(File dir) {
+  int i=0;
+  while(true) {
+    File entry =  dir.openNextFile();
+    if (! entry) {
+      dir.rewindDirectory();
+      break;
+    }
+    if(ends_with(entry.name(),".jpg")){
+      file_name_pointers[i] = (char*)malloc(strlen(entry.name()) + 1);//文字列へのポインタを確保
+      strcpy(file_name_pointers[i], entry.name());//文字列へのポインタをコピー
+      i++;
+    }
+  }
+  return i;
+}
+
+/** 
+* ファイル読み込み確認用
+*/
+void PrintLines(int num)
+{
+	int i;
+	for (i = 0; i < num; i++){
+		Serial.printf("%s\n", file_name_pointers[i]);
+  }
+}
+
+/** 
+* 指定された位置のファイルを描画
+*/
+void drawImg(int number){
+  Serial.printf("drawing%d:%s\n", number,file_name_pointers[number]);
+  canvas.drawJpgFile(SD,file_name_pointers[number]); 
+  canvas.pushCanvas(0,0,UPDATE_MODE_GC16);
+}
+
+/** 
+* バッテリー確認処理
+*/
+int Chk_battery()
+{
+  char buf[20];
+  uint32_t vol = M5.getBatteryVoltage();
+  if (vol < 3300)
+  {
+    vol = 3300;
+  }
+  else if (vol > 4350)
+  {
+    vol = 4350;
+  }
+  float battery = (float)(vol - 3300) / (float)(4350 - 3300);
+  if (battery <= 0.01)
+  {
+    battery = 0.01;
+  }
+  if (battery > 1)
+  {
+    battery = 1;
+  }
+  //uint8_t px = battery * 25;
+  // sprintf(buf, "BATT%d%% ", (int)(battery * 100));
+  // canvas.drawString(buf, 450, 0);
+
+  return (int)(battery * 100);
+}
+
+
+/** 
+* Arduino共通のセットアップ処理
+*/
+void setup()
+{
+  M5.begin();
+  SD.begin();
+
+  //描画初期化
+  M5.EPD.SetRotation(90);
+  M5.EPD.Clear(true);
+  canvas.createCanvas(540, 960);
+
+  //ファイル読み込み
+  root = SD.open("/");
+  n_file = roadDirectory(root);
+
+  if(n_file ==0){
+    // ファイル無いときのエラーハンドリング大変なので停止せる
+    Serial.println("no file");
+    canvas.setTextSize(2);
+    canvas.drawString("File Not Found Exception", 45, 350);
+
+    // 気温取得
+    M5.SHT30.Begin();//温度計周り
+    M5.SHT30.UpdateData();
+    float tem = M5.SHT30.GetTemperature();
+    float hum = M5.SHT30.GetRelHumidity();
+    char temStr[10];
+    char humStr[10];
+    dtostrf(tem, 2, 2, temStr); //小数点を含む数値を文字列に変換
+    dtostrf(hum, 2, 2, humStr);
+    canvas.setTextSize(2);
+    canvas.drawString("Temp:" + String(temStr) + "*C  " + "Humi:" + String(humStr) + "%", 0, 0);
+
+    // 描画
+    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+
+    //終了
+    M5.shutdown();
+
+  }else{
+    PrintLines(n_file);
+    drawImg(0);
+  }
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  M5.update();
+
+    // バッテリー残量取得
+  int btLevel = Chk_battery();
+
+  //充電中は画面更新しないようにする
+  if(btLevel==1){
+    //充電時の処理
+    canvas.createCanvas(540, 960);
+    canvas.setTextSize(6);
+    canvas.drawString("Charging....", 45, 350);
+    // canvas.drawString("Batt:" + String(btLevel) + "%",45,550 );
+    canvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+    delay(60000);
+  }else{
+    //ファイル位置設定
+    if(M5.BtnL.isPressed()){
+      //37番ピンに対応(上ボタン)
+
+      selected_file_number++;
+      if(selected_file_number>(n_file-1)){
+        //末端まで行ったら最初に戻る
+        selected_file_number=0;
+      }
+      drawImg(selected_file_number);
+      delay(1000);
+    }else if(M5.BtnR.isPressed()){
+      //39番ピンに対応(下ボタン)
+
+      selected_file_number--;
+      if(selected_file_number<0){
+        //先端まで行ったら最後に戻る
+        selected_file_number=(n_file-1);
+      }
+      drawImg(selected_file_number);
+      delay(1000);
+    }
+  }
 }
