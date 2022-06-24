@@ -25,7 +25,8 @@ int roadDirectory(File dir) {
       dir.rewindDirectory();
       break;
     }
-    if(ends_with(entry.name(),".jpg")){
+    Serial.printf("file_name:%s\n",entry.name());
+    if(ends_with(entry.name(),".jpg") || ends_with(entry.name(),".JPG")){
       file_name_pointers[i] = (char*)malloc(strlen(entry.name()) + 1);//文字列へのポインタを確保
       strcpy(file_name_pointers[i], entry.name());//文字列へのポインタをコピー
       i++;
