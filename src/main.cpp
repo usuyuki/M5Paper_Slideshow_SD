@@ -160,6 +160,8 @@ void setup()
 }
 
 void loop() {
+  int slideshow_number;
+
   M5.update();
 
     // バッテリー残量取得
@@ -196,7 +198,15 @@ void loop() {
       drawImg(selected_file_number);
       delay(500);
     }else if(M5.BtnP.isPressed()){
-      M5.shutdown(86400);//1日停止
+      slideshow_number= selected_file_number+1;
+      Serial.printf("Enable:slideshowMode\n");
+      //スライドショーモード
+      while(true){
+        //上でインクリメントしてるので==n_file-1でなく>=にしてる
+        slideshow_number = (slideshow_number>=(n_file-1)) ? 0 : slideshow_number+1;
+        drawImg(slideshow_number);
+        delay(10000);
+      }
     }
   }
 }
